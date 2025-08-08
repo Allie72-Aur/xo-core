@@ -1,10 +1,10 @@
 //! # xo-core
 //!
 //! `xo-core` is a fast, reusable, and well-tested Tic-Tac-Toe (Noughts and Crosses) game engine for Rust.
-//! It provides all core logic and an unbeatable Minimax AI, with a simple, public API suitable for embedding 
+//! It provides all core logic and an unbeatable Minimax AI, with a simple, public API suitable for embedding
 //! in CLI, GUI, or web apps.
 //!
-//! ## High-Level Summary 
+//! ## High-Level Summary
 //!
 //! - Core types: [`Player`], [`Cell`], [`GameState`], [`MoveError`]
 //! - [`GameEngine`] struct to manage game state and moves
@@ -44,11 +44,11 @@
 //!
 //! MIT
 
-mod types;
 mod game_engine;
+mod types;
 
-pub use types::{Player, Cell, GameState, MoveError};
 pub use game_engine::GameEngine;
+pub use types::{Cell, GameState, MoveError, Player};
 
 #[cfg(test)]
 mod tests {
@@ -80,7 +80,7 @@ mod tests {
     #[test]
     fn tie_game() {
         let mut game = GameEngine::new();
-        let moves = [0,1,2,4,3,5,7,6,8];
+        let moves = [0, 1, 2, 4, 3, 5, 7, 6, 8];
         for &i in &moves {
             game.make_move(i).unwrap();
         }
@@ -115,7 +115,7 @@ mod tests {
         game.make_move(0).unwrap(); // X
         game.make_move(4).unwrap(); // O
         game.make_move(1).unwrap(); // X
-        // O (AI) should block X at 2
+                                    // O (AI) should block X at 2
         assert_eq!(game.get_best_move(), Some(2));
     }
 
@@ -127,7 +127,7 @@ mod tests {
         game.make_move(2).unwrap(); // X
         game.make_move(1).unwrap(); // O
         game.make_move(3).unwrap(); // X
-        // O can win by playing at 7
+                                    // O can win by playing at 7
         assert_eq!(game.get_best_move(), Some(7));
     }
 }

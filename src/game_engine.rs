@@ -1,4 +1,4 @@
-use crate::types::{Cell, Player, GameState, MoveError};
+use crate::types::{Cell, GameState, MoveError, Player};
 
 // --- The Game Engine Struct ---
 
@@ -53,11 +53,16 @@ impl GameEngine {
         // Define all possible winning combinations (rows, columns, diagonals).
         let winning_combinations = [
             // Rows
-            [0, 1, 2], [3, 4, 5], [6, 7, 8],
+            [0, 1, 2],
+            [3, 4, 5],
+            [6, 7, 8],
             // Columns
-            [0, 3, 6], [1, 4, 7], [2, 5, 8],
+            [0, 3, 6],
+            [1, 4, 7],
+            [2, 5, 8],
             // Diagonals
-            [0, 4, 8], [2, 4, 6],
+            [0, 4, 8],
+            [2, 4, 6],
         ];
 
         // Iterate through each winning combination to check for a win.
@@ -96,7 +101,7 @@ impl GameEngine {
     pub fn get_board(&self) -> [Cell; 9] {
         self.board
     }
-    
+
     /// Returns the best possible move for the current player using the
     /// Minimax algorithm with alpha-beta pruning.
     ///
@@ -123,13 +128,13 @@ impl GameEngine {
                     Player::X => temp_board[i] = Cell::X,
                     Player::O => temp_board[i] = Cell::O,
                 }
-                
+
                 // Recursively call the minimax function to evaluate the score of this move.
                 let score = self.minimax_with_pruning(
-                    temp_board, 
-                    maximizing_player.opponent(), 
-                    -i32::MAX, 
-                    i32::MAX
+                    temp_board,
+                    maximizing_player.opponent(),
+                    -i32::MAX,
+                    i32::MAX,
                 );
 
                 // If this move's score is better than the current best score,
@@ -173,22 +178,24 @@ impl GameEngine {
                 };
             }
             GameState::Tie => return 0,
-            GameState::InProgress => {},
+            GameState::InProgress => {}
         }
-        
+
         // Find all available moves (empty cells).
         let available_moves: Vec<usize> = board
             .iter()
             .enumerate()
-            .filter_map(|(i, &cell)| {
-                if cell == Cell::Empty {
-                    Some(i)
-                } else {
-                    None
-                }
-            })
+            .filter_map(
+                |(i, &cell)| {
+                    if cell == Cell::Empty {
+                        Some(i)
+                    } else {
+                        None
+                    }
+                },
+            )
             .collect();
-            
+
         // If there are no available moves, it's a tie.
         if available_moves.is_empty() {
             return 0;
@@ -206,16 +213,16 @@ impl GameEngine {
                     Player::X => temp_board[move_index] = Cell::X,
                     Player::O => temp_board[move_index] = Cell::O,
                 }
-                
+
                 // Recursively call minimax for the opponent.
                 let eval = self.minimax_with_pruning(temp_board, player.opponent(), alpha, beta);
-                
+
                 // Update the maximum score.
                 max_eval = max_eval.max(eval);
-                
+
                 // Update alpha for the maximizing player.
                 alpha = alpha.max(eval);
-                
+
                 // Alpha-beta pruning condition.
                 if beta <= alpha {
                     break;
@@ -231,16 +238,16 @@ impl GameEngine {
                     Player::X => temp_board[move_index] = Cell::X,
                     Player::O => temp_board[move_index] = Cell::O,
                 }
-                
+
                 // Recursively call minimax for the opponent.
                 let eval = self.minimax_with_pruning(temp_board, player.opponent(), alpha, beta);
-                
+
                 // Update the minimum score.
                 min_eval = min_eval.min(eval);
-                
+
                 // Update beta for the minimizing player.
                 beta = beta.min(eval);
-                
+
                 // Alpha-beta pruning condition.
                 if beta <= alpha {
                     break;
@@ -256,11 +263,16 @@ impl GameEngine {
         // Define all possible winning combinations (rows, columns, diagonals).
         let winning_combinations = [
             // Rows
-            [0, 1, 2], [3, 4, 5], [6, 7, 8],
+            [0, 1, 2],
+            [3, 4, 5],
+            [6, 7, 8],
             // Columns
-            [0, 3, 6], [1, 4, 7], [2, 5, 8],
+            [0, 3, 6],
+            [1, 4, 7],
+            [2, 5, 8],
             // Diagonals
-            [0, 4, 8], [2, 4, 6],
+            [0, 4, 8],
+            [2, 4, 6],
         ];
 
         // Iterate through each winning combination to check for a win.
@@ -308,7 +320,7 @@ mod tests {
     #[test]
     fn tie_game() {
         let mut game = GameEngine::new();
-        let moves = [0,1,2,4,3,5,7,6,8];
+        let moves = [0, 1, 2, 4, 3, 5, 7, 6, 8];
         for &i in &moves {
             game.make_move(i).unwrap();
         }
@@ -334,7 +346,7 @@ mod tests {
         game.make_move(0).unwrap(); // X
         game.make_move(4).unwrap(); // O
         game.make_move(1).unwrap(); // X
-        // O (AI) should now block X at 2
+                                    // O (AI) should now block X at 2
         assert_eq!(game.get_best_move(), Some(2));
     }
 }

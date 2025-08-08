@@ -1,4 +1,4 @@
-use xo_core::{GameEngine, Player, GameState, MoveError};
+use xo_core::{GameEngine, GameState, MoveError, Player};
 
 // --- Main Function to Demonstrate Usage ---
 // This main function is provided to show how to use the GameEngine.
@@ -20,7 +20,9 @@ fn main() {
                 // Get user input.
                 let mut input = String::new();
                 println!("Player X, enter your move (0-8):");
-                std::io::stdin().read_line(&mut input).expect("Reading Line Should Succeed");
+                std::io::stdin()
+                    .read_line(&mut input)
+                    .expect("Reading Line Should Succeed");
 
                 // Parse the input and attempt to make a move.
                 let index: usize = match input.trim().parse() {
@@ -42,13 +44,14 @@ fn main() {
                     }
                 }
             }
-        } else { // CPU's turn
+        } else {
+            // CPU's turn
             println!("Player O (CPU) is thinking...");
-            
+
             // Get the best move from the engine. The `unwrap()` is safe here because
             // the loop condition `!game.is_over()` guarantees there's a move to be made.
             let best_move = game.get_best_move().unwrap();
-            
+
             // Make the CPU's move.
             game.make_move(best_move).unwrap();
         }
@@ -58,7 +61,7 @@ fn main() {
     println!("--- Final Board ---");
     print_board(&game);
     println!("--- Game Over! ---");
-    
+
     match game.check_state() {
         GameState::Win(Player::X) => println!("Player X wins!"),
         GameState::Win(Player::O) => println!("Player O (CPU) wins!"),
@@ -71,7 +74,12 @@ fn main() {
 fn print_board(game: &GameEngine) {
     let board = game.get_board();
     for i in 0..3 {
-        println!(" {} | {} | {} ", board[i*3], board[i*3+1], board[i*3+2]);
+        println!(
+            " {} | {} | {} ",
+            board[i * 3],
+            board[i * 3 + 1],
+            board[i * 3 + 2]
+        );
         if i < 2 {
             println!("---|---|---");
         }
