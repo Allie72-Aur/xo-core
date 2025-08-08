@@ -289,3 +289,52 @@ impl GameEngine {
         GameState::InProgress
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*; // Import everything from this module
+
+    #[test]
+    fn x_can_win() {
+        let mut game = GameEngine::new();
+        game.make_move(0).unwrap(); // X
+        game.make_move(3).unwrap(); // O
+        game.make_move(1).unwrap(); // X
+        game.make_move(4).unwrap(); // O
+        game.make_move(2).unwrap(); // X wins
+        assert_eq!(game.check_state(), GameState::Win(Player::X));
+    }
+
+    #[test]
+    fn tie_game() {
+        let mut game = GameEngine::new();
+        let moves = [0,1,2,4,3,5,7,6,8];
+        for &i in &moves {
+            game.make_move(i).unwrap();
+        }
+        assert_eq!(game.check_state(), GameState::Tie);
+    }
+
+    #[test]
+    fn invalid_move_out_of_bounds() {
+        let mut game = GameEngine::new();
+        assert_eq!(game.make_move(9), Err(MoveError::OutOfBounds));
+    }
+
+    #[test]
+    fn invalid_move_occupied() {
+        let mut game = GameEngine::new();
+        game.make_move(0).unwrap();
+        assert_eq!(game.make_move(0), Err(MoveError::CellOccupied));
+    }
+
+    #[test]
+    fn minimax_ai_blocks_win() {
+        let mut game = GameEngine::new();
+        game.make_move(0).unwrap(); // X
+        game.make_move(4).unwrap(); // O
+        game.make_move(1).unwrap(); // X
+        // O (AI) should now block X at 2
+        assert_eq!(game.get_best_move(), Some(2));
+    }
+}
