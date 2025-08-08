@@ -15,6 +15,13 @@ include = ["src/", "LICENSE", "README.md"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[profile.release]
+opt-level = 3 # Maximum optimization level for performance
+debug = false # Disable debug info for smaller binaries
+lto = "fat"   # Enable Link-Time Optimization for cross-crate optimization
+codegen-units = 1 # Reduce code generation units for potentially better optimization, but slower compile times
+panic = "abort" # Optimize for size by aborting on panic, instead of unwinding
+
 [badges]
 maintenance = { status = "actively-developed" }
 
