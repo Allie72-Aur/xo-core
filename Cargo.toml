@@ -9,7 +9,7 @@ repository = "https://github.com/Allie72-Aur/xo-core"
 license = 'MIT'
 readme = "README.md"
 documentation = "https://docs.rs/xo-core"
-keywords = ["xo", "tic-tac-toe", "noughts-and-crosses", "game", "ai"]
+keywords = ["xo", "tic-tac-toe", "noughts-and-crosses", "game", "ai", "minimax"]
 categories = ["games", "algorithms"]
 include = ["src/", "LICENSE", "README.md"]
 
