@@ -2,5 +2,20 @@
 name = "xo-core"
 version = "0.1.0"
 edition = "2024"
+rust-version = "1.88"
+authors = ["Allie72phe <alliephenish@gmail.com>"]
+description = "A fast, reusable, and well-documented game engine for Tic-Tac-Toe (Noughts and Crosses) in Rust"
+repository = "https://github.com/Allie72-Aur/xo-core"
+license = 'MIT'
+readme = "README.md"
+documentation = "https://docs.rs/xo-core"
+keywords = ["xo", "tic-tac-toe", "noughts-and-crosses", "game", "ai"]
+categories = ["games", "algorithms"]
+include = ["src/", "LICENSE", "README.md"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[badges]
+maintenance = { status = "actively-developed" }
 
 [dependencies]
