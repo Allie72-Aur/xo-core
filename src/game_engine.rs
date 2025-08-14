@@ -1,18 +1,41 @@
 use crate::types::{Cell, GameState, MoveError, Player};
 
-// --- The Game Engine Struct ---
-
-/// The core game engine. It manages the board state and provides methods
-/// for game logic, including the Minimax AI.
+/// The core Tic-Tac-Toe game engine.
+///
+/// This struct manages the board, enforces rules, and provides
+/// an unbeatable AI opponent using the Minimax algorithm.
+///
+/// # Board Layout
+///
+/// The board is represented as a flat array of 9 cells.
+/// Index positions are arranged like this:
+///
+/// ```text
+///  0 | 1 | 2
+/// -----------
+///  3 | 4 | 5
+/// -----------
+///  6 | 7 | 8
+/// ```
 pub struct GameEngine {
     board: [Cell; 9],
+    /// The player whose turn it is.
     pub current_player: Player,
 }
 
 impl GameEngine {
-    /// Creates a new instance of the game engine with a fresh, empty board.
+    /// Creates a new instance of the game engine with an empty board.
     ///
-    /// The game always starts with Player X.
+    /// The game always starts with `Player::X`.
+    ///
+    /// # Example
+    /// ```
+    /// use xo_core::{GameEngine, Player, Cell};
+    ///
+    /// let game = GameEngine::new();
+    /// assert_eq!(game.current_player, Player::X);
+    /// assert!(game.get_board().iter().all(|&c| c == Cell::Empty));
+    /// ```
     pub fn new() -> Self {
         Self {
             board: [Cell::Empty; 9],
@@ -20,15 +43,36 @@ impl GameEngine {
         }
     }
 
-    /// Attempts to make a move for the current player at the specified index.
+    /// Attempts to make a move for the current player at the given board index.
     ///
-    /// - `index`: The 0-based index of the cell to place the mark.
-    /// Returns `Ok(())` on success or a `MoveError` if the move is invalid.
+    /// # Parameters
+    /// - `index`: The 0-based cell index (0–8).
+    ///
+    /// # Returns
+    /// - `Ok(())` if the move was made successfully.
+    /// - `Err(MoveError)` if the move is invalid:
+    ///   - `MoveError::OutOfBounds` if `index >= 9`
+    ///   - `MoveError::CellOccupied` if the cell already has a mark
+    ///
+    /// After a successful move, the turn switches to the other player.
+    ///
+    /// # Example
+    /// ```
+    /// use xo_core::{GameEngine, MoveError, Cell};
+    ///
+    /// let mut game = GameEngine::new();
+    /// assert_eq!(game.make_move(0), Ok(()));
+    /// assert_eq!(game.get_board()[0], Cell::X);
+    ///
+    /// // Cannot play twice in the same cell
+    /// assert_eq!(game.make_move(0), Err(MoveError::CellOccupied));
+    /// ```
     pub fn make_move(&mut self, index: usize) -> Result<(), MoveError> {
         // First, check if the index is within the valid range of the board.
         if index >= 9 {
             return Err(MoveError::OutOfBounds);
         }
+
         // Then, check if the cell is already occupied.
         if self.board[index] != Cell::Empty {
             return Err(MoveError::CellOccupied);
@@ -49,6 +93,24 @@ impl GameEngine {
     ///
     /// This method is public and can be called at any time to determine
     /// if there is a winner, a tie, or if the game is still in progress.
+    /// Possible results:
+    /// - `GameState::Win(Player)` if a player has three in a row.
+    /// - `GameState::Tie` if the board is full with no winner.
+    /// - `GameState::InProgress` if the game is still ongoing.
+    ///
+    /// # Example
+    /// ```
+    /// use xo_core::{GameEngine, GameState, Player};
+    ///
+    /// let mut game = GameEngine::new();
+    /// game.make_move(0).unwrap(); // X
+    /// game.make_move(3).unwrap(); // O
+    /// game.make_move(1).unwrap(); // X
+    /// game.make_move(4).unwrap(); // O
+    /// game.make_move(2).unwrap(); // X wins
+    ///
+    /// assert_eq!(game.check_state(), GameState::Win(Player::X));
+    /// ```
     pub fn check_state(&self) -> GameState {
         // Define all possible winning combinations (rows, columns, diagonals).
         let winning_combinations = [
@@ -92,20 +154,53 @@ impl GameEngine {
         GameState::InProgress
     }
 
-    /// A convenience method to check if the game has ended.
+    /// Returns `true` if the game is finished (win or tie).
+    ///
+    /// # Example
+    /// ```
+    /// use xo_core::GameEngine;
+    ///
+    /// let mut game = GameEngine::new();
+    /// assert_eq!(game.is_over(), false);
+    /// ```
     pub fn is_over(&self) -> bool {
         self.check_state() != GameState::InProgress
     }
 
     /// Returns a copy of the current board state.
+    ///
+    /// This can be useful for rendering the board in a UI.
+    ///
+    /// # Example
+    /// ```
+    /// use xo_core::{GameEngine, Cell};
+    ///
+    /// let game = GameEngine::new();
+    /// let board = game.get_board();
+    /// assert_eq!(board.len(), 9);
+    /// assert!(board.iter().all(|&c| c == Cell::Empty));
+    /// ```
     pub fn get_board(&self) -> [Cell; 9] {
         self.board
     }
 
-    /// Returns the best possible move for the current player using the
-    /// Minimax algorithm with alpha-beta pruning.
+    /// Calculates the best move for the current player using
+    /// the Minimax algorithm with alpha-beta pruning.
     ///
-    /// If the game is already over, this method will return `None`.
+    /// Returns `Some(index)` for the best move, or `None` if the game is already over.
+    ///
+    /// # Example
+    /// ```
+    /// use xo_core::GameEngine;
+    ///
+    /// let mut game = GameEngine::new();
+    /// game.make_move(0).unwrap(); // X
+    /// game.make_move(4).unwrap(); // O
+    /// game.make_move(1).unwrap(); // X
+    ///
+    /// // O should block X's winning move at index 2
+    /// assert_eq!(game.get_best_move(), Some(2));
+    /// ```
     pub fn get_best_move(&self) -> Option<usize> {
         // If the game is over, no move can be made.
         if self.is_over() {
