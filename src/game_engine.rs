@@ -3,7 +3,7 @@ use crate::types::{Cell, GameState, MoveError, Player};
 /// The core Tic-Tac-Toe game engine.
 ///
 /// This struct manages the board, enforces rules, and provides
-/// an unbeatable AI opponent using the Minimax algorithm.
+/// an unbeatable AI opponent using the Minimax algorithm if enabled.
 ///
 /// # Board Layout
 ///
@@ -21,12 +21,15 @@ pub struct GameEngine {
     board: [Cell; 9],
     /// The player whose turn it is.
     pub current_player: Player,
+    /// Whether the AI is enabled (true = single-player vs AI, false = human vs human).
+    pub ai_enabled: bool,
 }
 
 impl GameEngine {
     /// Creates a new instance of the game engine with an empty board.
     ///
     /// The game always starts with `Player::X`.
+    /// By default, AI is enabled.
     ///
     /// # Example
     /// ```
@@ -35,11 +38,33 @@ impl GameEngine {
     /// let game = GameEngine::new();
     /// assert_eq!(game.current_player, Player::X);
     /// assert!(game.get_board().iter().all(|&c| c == Cell::Empty));
+    /// assert!(game.ai_enabled);
     /// ```
     pub fn new() -> Self {
         Self {
             board: [Cell::Empty; 9],
             current_player: Player::X,
+            ai_enabled: true,
+        }
+    }
+
+    /// Creates a new instance of the game engine, with an option to disable AI.
+    ///
+    /// # Parameters
+    /// - `ai_enabled`: Set to `true` for single-player vs AI, or `false` for human vs human.
+    ///
+    /// # Example
+    /// ```
+    /// use xo_core::GameEngine;
+    ///
+    /// let game = GameEngine::with_ai(false);
+    /// assert!(!game.ai_enabled);
+    /// ```
+    pub fn with_ai(ai_enabled: bool) -> Self {
+        Self {
+            board: [Cell::Empty; 9],
+            current_player: Player::X,
+            ai_enabled,
         }
     }
 
@@ -185,11 +210,20 @@ impl GameEngine {
     }
 
     /// Calculates the best move for the current player using
-    /// the Minimax algorithm with alpha-beta pruning.
+    /// the Minimax algorithm with alpha-beta pruning if AI is enabled.
     ///
-    /// Returns `Some(index)` for the best move, or `None` if the game is already over.
+    /// Returns:
+    /// - `Some(index)` for the best move when AI is enabled.
+    /// - `None` if the game is over or AI is disabled.
     ///
-    /// # Example
+    /// # Example without AI
+    /// ```
+    /// use xo_core::GameEngine;
+    ///
+    /// let game = GameEngine::with_ai(false);
+    /// assert_eq!(game.get_best_move(), None); // AI disabled
+    /// ```
+    /// # Example with AI
     /// ```
     /// use xo_core::GameEngine;
     ///
@@ -201,9 +235,11 @@ impl GameEngine {
     /// // O should block X's winning move at index 2
     /// assert_eq!(game.get_best_move(), Some(2));
     /// ```
+    ///
     pub fn get_best_move(&self) -> Option<usize> {
         // If the game is over, no move can be made.
-        if self.is_over() {
+        // furthermore, if AI is disabled, return None.
+        if !self.ai_enabled || self.is_over() {
             return None;
         }
 
@@ -443,5 +479,11 @@ mod tests {
         game.make_move(1).unwrap(); // X
                                     // O (AI) should now block X at 2
         assert_eq!(game.get_best_move(), Some(2));
+    }
+
+    #[test]
+    fn human_vs_human_mode() {
+        let game = GameEngine::with_ai(false);
+        assert_eq!(game.get_best_move(), None); // AI disabled
     }
 }
