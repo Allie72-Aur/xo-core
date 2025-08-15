@@ -274,11 +274,7 @@ impl GameEngine {
             .enumerate()
             .filter_map(
                 |(i, &cell)| {
-                    if cell == Cell::Empty {
-                        Some(i)
-                    } else {
-                        None
-                    }
+                    if cell == Cell::Empty { Some(i) } else { None }
                 },
             )
             .collect();
@@ -433,7 +429,7 @@ mod tests {
         game.make_move(0).unwrap(); // X
         game.make_move(4).unwrap(); // O
         game.make_move(1).unwrap(); // X
-                                    // O (AI) should now block X at 2
+        // O (AI) should now block X at 2
         assert_eq!(game.get_best_move(), Some(2));
     }
 
