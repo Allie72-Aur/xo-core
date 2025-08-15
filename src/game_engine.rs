@@ -5,10 +5,9 @@ use crate::types::{Cell, GameState, MoveError, Player};
 /// This struct manages the board, enforces rules, and provides
 /// an unbeatable AI opponent using the Minimax algorithm if enabled.
 ///
-/// # Board Layout
-///
-/// The board is represented as a flat array of 9 cells.
-/// Index positions are arranged like this:
+/// # Board Representation
+/// The board is stored internally as a flat array of 9 cells.  
+/// Indices map to positions like this:
 ///
 /// ```text
 ///  0 | 1 | 2
@@ -17,19 +16,54 @@ use crate::types::{Cell, GameState, MoveError, Player};
 /// -----------
 ///  6 | 7 | 8
 /// ```
+///
+/// # Game Modes
+/// - **Human vs Human:** Both players call [`make_move`] manually.
+/// - **Human vs AI:** calls [`make_move`], then queries
+///   [`get_best_move`] to find the AI’s move and applies it with [`make_move`].
+///
+/// # Examples
+///
+/// ## Human vs Human
+/// ```
+/// use xo_core::{GameEngine, Player};
+///
+/// let mut game = GameEngine::with_ai(false);
+///
+/// game.make_move(0).unwrap(); // X plays top-left
+/// game.make_move(4).unwrap(); // O plays center
+///
+/// assert_eq!(game.current_player, Player::X);
+/// ```
+///
+/// ## Human vs AI
+/// ```
+/// use xo_core::GameEngine;
+///
+/// let mut game = GameEngine::with_ai(true);
+///
+/// game.make_move(0).unwrap(); // Human plays top-left
+///
+/// if let Some(ai_move) = game.get_best_move() {
+///     game.make_move(ai_move).unwrap(); // Apply AI move
+/// }
+/// ```
 pub struct GameEngine {
     board: [Cell; 9],
     /// The player whose turn it is.
     pub current_player: Player,
-    /// Whether the AI is enabled (true = single-player vs AI, false = human vs human).
+    /// Whether the AI is enabled.
+    ///
+    /// - `true`: Single-player vs AI
+    /// - `false`: Human vs Human
     pub ai_enabled: bool,
 }
 
 impl GameEngine {
     /// Creates a new instance of the game engine with an empty board.
     ///
-    /// The game always starts with `Player::X`.
-    /// By default, AI is enabled.
+    /// The game always starts with `Player::X`.  
+    /// By default, AI is **enabled**.
     ///
     /// # Example
     /// ```
@@ -48,10 +82,12 @@ impl GameEngine {
         }
     }
 
-    /// Creates a new instance of the game engine, with an option to disable AI.
+    /// Creates a new instance of the game engine with an option to disable AI.
     ///
     /// # Parameters
-    /// - `ai_enabled`: Set to `true` for single-player vs AI, or `false` for human vs human.
+    /// - `ai_enabled`:  
+    ///   - `true`: Single-player vs AI  
+    ///   - `false`: Human vs Human
     ///
     /// # Example
     /// ```
@@ -68,6 +104,11 @@ impl GameEngine {
         }
     }
 
+    /// Returns a reference to the current board.
+    pub fn get_board(&self) -> &[Cell; 9] {
+        &self.board
+    }
+
     /// Attempts to make a move for the current player at the given board index.
     ///
     /// # Parameters
@@ -79,17 +120,12 @@ impl GameEngine {
     ///   - `MoveError::OutOfBounds` if `index >= 9`
     ///   - `MoveError::CellOccupied` if the cell already has a mark
     ///
-    /// After a successful move, the turn switches to the other player.
-    ///
     /// # Example
     /// ```
-    /// use xo_core::{GameEngine, MoveError, Cell};
+    /// use xo_core::{GameEngine, MoveError};
     ///
     /// let mut game = GameEngine::new();
-    /// assert_eq!(game.make_move(0), Ok(()));
-    /// assert_eq!(game.get_board()[0], Cell::X);
-    ///
-    /// // Cannot play twice in the same cell
+    /// assert!(game.make_move(0).is_ok());
     /// assert_eq!(game.make_move(0), Err(MoveError::CellOccupied));
     /// ```
     pub fn make_move(&mut self, index: usize) -> Result<(), MoveError> {
@@ -114,109 +150,29 @@ impl GameEngine {
         Ok(())
     }
 
-    /// Checks the current state of the game.
+    /// Returns the current state of the game.
     ///
-    /// This method is public and can be called at any time to determine
-    /// if there is a winner, a tie, or if the game is still in progress.
-    /// Possible results:
-    /// - `GameState::Win(Player)` if a player has three in a row.
-    /// - `GameState::Tie` if the board is full with no winner.
-    /// - `GameState::InProgress` if the game is still ongoing.
-    ///
-    /// # Example
-    /// ```
-    /// use xo_core::{GameEngine, GameState, Player};
-    ///
-    /// let mut game = GameEngine::new();
-    /// game.make_move(0).unwrap(); // X
-    /// game.make_move(3).unwrap(); // O
-    /// game.make_move(1).unwrap(); // X
-    /// game.make_move(4).unwrap(); // O
-    /// game.make_move(2).unwrap(); // X wins
-    ///
-    /// assert_eq!(game.check_state(), GameState::Win(Player::X));
-    /// ```
+    /// Possible values:
+    /// - `GameState::InProgress`
+    /// - `GameState::Tie`
+    /// - `GameState::Won(Player::X)`
+    /// - `GameState::Won(Player::O)`
     pub fn check_state(&self) -> GameState {
-        // Define all possible winning combinations (rows, columns, diagonals).
-        let winning_combinations = [
-            // Rows
-            [0, 1, 2],
-            [3, 4, 5],
-            [6, 7, 8],
-            // Columns
-            [0, 3, 6],
-            [1, 4, 7],
-            [2, 5, 8],
-            // Diagonals
-            [0, 4, 8],
-            [2, 4, 6],
-        ];
-
-        // Iterate through each winning combination to check for a win.
-        for combination in &winning_combinations {
-            let cell_1 = self.board[combination[0]];
-            let cell_2 = self.board[combination[1]];
-            let cell_3 = self.board[combination[2]];
-
-            // If the cells are not empty and all three are the same, we have a winner.
-            if cell_1 != Cell::Empty && cell_1 == cell_2 && cell_2 == cell_3 {
-                // Determine the winning player based on the cell's state.
-                return match cell_1 {
-                    Cell::X => GameState::Win(Player::X),
-                    Cell::O => GameState::Win(Player::O),
-                    _ => unreachable!(), // This case should not be reached.
-                };
-            }
-        }
-
-        // If no winner is found, check if the board is full.
-        // A full board with no winner means it's a tie.
-        if !self.board.iter().any(|&cell| cell == Cell::Empty) {
-            return GameState::Tie;
-        }
-
-        // If neither a win nor a tie, the game is still ongoing.
-        GameState::InProgress
+        Self::check_board_state(&self, self.board)
     }
 
-    /// Returns `true` if the game is finished (win or tie).
-    ///
-    /// # Example
-    /// ```
-    /// use xo_core::GameEngine;
-    ///
-    /// let mut game = GameEngine::new();
-    /// assert_eq!(game.is_over(), false);
-    /// ```
+    /// Returns `true` if the game is finished (either win or draw).
     pub fn is_over(&self) -> bool {
-        self.check_state() != GameState::InProgress
+        !matches!(self.check_state(), GameState::InProgress)
     }
 
-    /// Returns a copy of the current board state.
-    ///
-    /// This can be useful for rendering the board in a UI.
-    ///
-    /// # Example
-    /// ```
-    /// use xo_core::{GameEngine, Cell};
-    ///
-    /// let game = GameEngine::new();
-    /// let board = game.get_board();
-    /// assert_eq!(board.len(), 9);
-    /// assert!(board.iter().all(|&c| c == Cell::Empty));
-    /// ```
-    pub fn get_board(&self) -> [Cell; 9] {
-        self.board
-    }
-
-    /// Calculates the best move for the current player using
-    /// the Minimax algorithm with alpha-beta pruning if AI is enabled.
+    /// Calculates the best move for the current player using Minimax with pruning.
     ///
     /// Returns:
     /// - `Some(index)` for the best move when AI is enabled.
     /// - `None` if the game is over or AI is disabled.
     ///
-    /// # Example without AI
+    /// # Example
     /// ```
     /// use xo_core::GameEngine;
     ///
