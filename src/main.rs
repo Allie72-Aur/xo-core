@@ -1,5 +1,5 @@
-use xo_core::{GameEngine, GameState, MoveError, Player};
 use std::io;
+use xo_core::{GameEngine, GameState, MoveError, Player};
 
 // --- Main Function to Demonstrate Usage ---
 // This main function is provided to show how to use the GameEngine.
@@ -11,7 +11,9 @@ fn main() {
     println!("\t2. Two-Player Mode");
 
     let mut input = String::new();
-    io::stdin().read_line(&mut input).expect("Failed to read line");
+    io::stdin()
+        .read_line(&mut input)
+        .expect("Failed to read line");
     let mode = input.trim().to_string();
 
     if mode != "1" && mode != "2" {
@@ -26,7 +28,9 @@ fn main() {
         println!("\t2. Player O (Goes second)");
 
         input.clear();
-        io::stdin().read_line(&mut input).expect("Failed to read line");
+        io::stdin()
+            .read_line(&mut input)
+            .expect("Failed to read line");
         player_choice = input.trim();
 
         if player_choice != "1" && player_choice != "2" {
@@ -71,13 +75,19 @@ fn main() {
 }
 
 fn single_player_turn(game: &mut GameEngine, player_choice: &str) {
-    let human_player = if player_choice == "1" { Player::X } else { Player::O };
+    let human_player = if player_choice == "1" {
+        Player::X
+    } else {
+        Player::O
+    };
 
     if game.current_player == human_player {
         loop {
             let mut input = String::new();
             println!("Your turn ({:#?}), enter move 0-8:", human_player);
-            io::stdin().read_line(&mut input).expect("Failed to read line");
+            io::stdin()
+                .read_line(&mut input)
+                .expect("Failed to read line");
 
             let index: usize = match input.trim().parse() {
                 Ok(num) => num,
@@ -104,7 +114,9 @@ fn two_player_turn(game: &mut GameEngine) {
     loop {
         let mut input = String::new();
         println!("Player {:?}, enter your move (0-8):", game.current_player);
-        io::stdin().read_line(&mut input).expect("Failed to read line");
+        io::stdin()
+            .read_line(&mut input)
+            .expect("Failed to read line");
 
         let index: usize = match input.trim().parse() {
             Ok(num) => num,
